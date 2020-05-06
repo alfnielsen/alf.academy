@@ -1,4 +1,4 @@
-import { all, call, ForkEffect, put, takeLatest } from 'redux-saga/effects'
+import { all, call, ForkEffect, put, PutEffect, takeLatest } from 'redux-saga/effects'
 import { ApiResponse, create } from 'apisauce'
 import { FetchAreaBase } from 'redux-area'
 import { IFunction } from './IFunction'
@@ -33,6 +33,7 @@ function regSaga(reg: ForkEffect) {
    areaSagaList.push(reg)
 }
 
+
 export const _functionSearch = area.addFetch("FunctionSearch")
    .action((name: string) => ({ name }))
    .successAction((functions: IFunction[]) => ({ functions }))
@@ -41,15 +42,15 @@ export const _functionSearch = area.addFetch("FunctionSearch")
    })
    .baseFailure()
 
-regSaga(
-   takeLatest(_functionSearch.request.name, function* (action: typeof _functionSearch.request.type) {
-      const search: IFunctionSearch = { name: action.name }
-      const response: ApiResponse<IFunction[]> = (yield call(endpoint.searchFunction, search)) as any
-      if (response.data) {
-         console.log("SAGA INSITE..", response)
-         yield put(_functionSearch.success(response.data))
-      }
-   }))
+regSaga(takeLatest(_functionSearch.request.name, function* (action: typeof _functionSearch.request.type) {
+   const search: IFunctionSearch = { name: action.name }
+   const response: ApiResponse<IFunction[]> = (yield call(endpoint.searchFunction, search)) as any
+   if (response.data) {
+      console.log("SAGA INSITE..", response)
+      yield put(_functionSearch.success(response.data))
+   }
+}))
+
 
 
 export function* rootSaga() {
