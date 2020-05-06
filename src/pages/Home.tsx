@@ -1,8 +1,4 @@
 import React, { FC, useEffect } from "react"
-<<<<<<< HEAD
-
-=======
->>>>>>> rewrite base. add php back
 import useFunctions from "../redux-area/functions.redux"
 
 const Home: FC = () => {

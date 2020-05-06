@@ -1,11 +1,9 @@
+import { all, call, ForkEffect, put, takeLatest } from 'redux-saga/effects'
 import { ApiResponse, create } from 'apisauce'
 import { FetchAreaBase } from 'redux-area'
 import { IFunction } from './IFunction'
 import { IFunctionSearch } from './IFunctionSearch'
 import { IStoreState } from '../config/configureStore'
-import { post } from './http'
-import * as saga from 'redux-saga/effects'
-import { SagaIterator } from 'redux-saga'
 import { useCallback } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 
@@ -30,11 +28,9 @@ const area = FetchAreaBase("alf").CreateArea({
       functions: []
    } as IFunctionState
 })
-const areaSagaList: saga.ForkEffect[] = []
-function regSaga(type: string, gen: (action: any) => Generator) {
-   areaSagaList.push(
-      saga.takeLatest(type, gen)
-   )
+const areaSagaList: ForkEffect[] = []
+function regSaga(reg: ForkEffect) {
+   areaSagaList.push(reg)
 }
 
 export const _functionSearch = area.addFetch("FunctionSearch")
@@ -45,22 +41,21 @@ export const _functionSearch = area.addFetch("FunctionSearch")
    })
    .baseFailure()
 
-regSaga(_functionSearch.request.name, function* (action: typeof _functionSearch.request.type) {
-   const search: IFunctionSearch = { name: action.name }
-   const response: ApiResponse<IFunction[]> = (yield saga.call(endpoint.searchFunction, search)) as any
-   if (response.data) {
-      console.log("SAGA INSITE..", response)
-      yield saga.put(_functionSearch.success(response.data))
-   }
-})
+regSaga(
+   takeLatest(_functionSearch.request.name, function* (action: typeof _functionSearch.request.type) {
+      const search: IFunctionSearch = { name: action.name }
+      const response: ApiResponse<IFunction[]> = (yield call(endpoint.searchFunction, search)) as any
+      if (response.data) {
+         console.log("SAGA INSITE..", response)
+         yield put(_functionSearch.success(response.data))
+      }
+   }))
 
 
 export function* rootSaga() {
-   console.log("SAGA!", areaSagaList)
-   yield saga.all(areaSagaList)
+   yield all(areaSagaList)
 }
 export const rootReducer = area.rootReducer()
-
 
 const useFunctions = () => {
    const dispatch = useDispatch()
